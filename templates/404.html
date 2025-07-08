@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Página no encontrada - SRI Learning{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="card shadow rounded-4 border-0">
+            <div class="card-body py-5">
+                <div class="mb-4">
+                    <h1 class="display-1 fw-bold text-primary">404</h1>
+                    <h2 class="fw-bold mb-3">¡Ups! Página no encontrada</h2>
+                    <p class="lead text-muted mb-4">La página que buscas no existe o ha sido movida.</p>
+                </div>
+                
+                <div class="mb-4">
+                    <img src="https://placehold.co/400x300/1a3a6c/FFF?text=404" alt="Error 404" class="img-fluid rounded-4 shadow-sm">
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Volver al inicio</a>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-lg">Ver cursos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

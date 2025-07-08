@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}{{ title }} - SRI Learning{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lesson-form {
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+    .lesson-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h3 class="mb-0">{{ title }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" id="course-form">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3">Información del Curso</h5>
+                        {{ form.non_field_errors }}
+                        <div class="row">
+                            <div class="col-12">{{ form.title|as_crispy_field }}</div>
+                        </div>
+                        {{ form.short_description|as_crispy_field }}
+                        <div class="row">
+                            <div class="col-md-6">{{ form.thumbnail|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.promo_video_url|as_crispy_field }}</div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3">Lecciones del Curso</h5>
+                        {{ formset.management_form }}
+                        <div id="lesson-forms">
+                            {% for lesson_form in formset %}
+                            <div class="border rounded p-3 mb-3 lesson-form">
+                                <h6 class="mb-3">Lección <span class="lesson-number">{{ forloop.counter }}</span></h6>
+                                {{ lesson_form.non_field_errors }}
+                                <div class="row">
+                                    <div class="col-md-8">{{ lesson_form.title|as_crispy_field }}</div>
+                                    <div class="col-md-4">{{ lesson_form.order|as_crispy_field }}</div>
+                                </div>
+                                {{ lesson_form.video_url|as_crispy_field }}
+                                {{ lesson_form.content|as_crispy_field }}
+                                {% for hidden_field in lesson_form.hidden_fields %}
+                                    {{ hidden_field }}
+                                {% endfor %}
+                                {% if formset.can_delete %}
+                                <input type="checkbox" class="d-none lesson-delete-checkbox" id="{{ lesson_form.DELETE.id_for_label }}" name="{{ lesson_form.DELETE.html_name }}">
+                                <button type="button" class="btn btn-danger btn-sm lesson-delete-btn">Eliminar lección</button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-lesson" class="btn btn-outline-primary mb-4">
+                            <i class="bi bi-plus-circle"></i> Añadir otra lección
+                        </button>
+                        
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">Prueba/Test del Curso</h5>
+                        {{ test_form.non_field_errors }}
+                        <div class="mb-3">
+                            {{ test_form.title|as_crispy_field }}
+                            {{ test_form.description|as_crispy_field }}
+                            <div class="row">
+                                <div class="col-md-6">{{ test_form.max_attempts|as_crispy_field }}</div>
+                                <div class="col-md-6">{{ test_form.time_limit|as_crispy_field }}</div>
+                            </div>
+                        </div>
+                        <h6 class="mb-2">Preguntas del Test</h6>
+                        {{ question_formset.management_form }}
+                        <div id="question-forms">
+                            {% for question_form in question_formset %}
+                            <div class="border rounded p-3 mb-3 question-form-block">
+                                {{ question_form.non_field_errors }}
+                                {{ question_form.text|as_crispy_field }}
+                                <div class="row">
+                                    <div class="col-md-6">{{ question_form.option_a|as_crispy_field }}</div>
+                                    <div class="col-md-6">{{ question_form.option_b|as_crispy_field }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">{{ question_form.option_c|as_crispy_field }}</div>
+                                    <div class="col-md-6">{{ question_form.option_d|as_crispy_field }}</div>
+                                </div>
+                                <div class="mb-2">{{ question_form.correct_option|as_crispy_field }}</div>
+                                {% for hidden_field in question_form.hidden_fields %}
+                                    {{ hidden_field }}
+                                {% endfor %}
+                                {% if question_formset.can_delete %}
+                                <input type="checkbox" class="d-none question-delete-checkbox" id="{{ question_form.DELETE.id_for_label }}" name="{{ question_form.DELETE.html_name }}">
+                                <button type="button" class="btn btn-danger btn-sm question-delete-btn">Eliminar</button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-question" class="btn btn-outline-info mb-4">
+                            <i class="bi bi-plus-circle"></i> Añadir otra pregunta
+                        </button>
+                        
+                        <hr class="my-4">
+                        <h5 class="mb-3">Materiales Adicionales</h5>
+                        {{ material_formset.management_form }}
+                        <div id="material-forms">
+                            {% for material_form in material_formset %}
+                            <div class="border rounded p-3 mb-3 material-form-block">
+                                {{ material_form.title|as_crispy_field }}
+                                {{ material_form.file|as_crispy_field }}
+                                {{ material_form.url|as_crispy_field }}
+                                {% if material_formset.can_delete %}
+                                <input type="checkbox" class="d-none material-delete-checkbox" id="{{ material_form.DELETE.id_for_label }}" name="{{ material_form.DELETE.html_name }}">
+                                <button type="button" class="btn btn-danger btn-sm material-delete-btn">Eliminar</button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-material" class="btn btn-outline-secondary mb-4">
+                            <i class="bi bi-plus-circle"></i> Añadir otro material
+                        </button>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar Curso</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación de archivos
+    function validateFile(input, maxSize, allowedTypes) {
+        const file = input.files[0];
+        if (file) {
+            // Validar tamaño
+            if (file.size > maxSize) {
+                alert(`El archivo es demasiado grande. Máximo ${maxSize / (1024 * 1024)}MB.`);
+                input.value = '';
+                return false;
+            }
+            
+            // Validar tipo
+            if (allowedTypes && !allowedTypes.includes(file.type)) {
+                alert('Tipo de archivo no permitido.');
+                input.value = '';
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    // Aplicar validación a campos de archivo
+    const imageInputs = document.querySelectorAll('input[type="file"][accept*="image"]');
+    imageInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            validateFile(this, 10 * 1024 * 1024, ['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+        });
+    });
+    
+    const documentInputs = document.querySelectorAll('input[type="file"]:not([accept*="image"])');
+    documentInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            validateFile(this, 10 * 1024 * 1024, [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'text/plain',
+                'text/csv'
+            ]);
+        });
+    });
+
+    const addLessonBtn = document.getElementById('add-lesson');
+    const lessonForms = document.getElementById('lesson-forms');
+    const totalFormsInput = document.getElementById('id_lessons-TOTAL_FORMS');
+    
+    addLessonBtn.addEventListener('click', function() {
+        const formCount = parseInt(totalFormsInput.value);
+        const newForm = lessonForms.children[0].cloneNode(true);
+        
+        // Actualizar IDs y nombres de los campos
+        const formRegex = new RegExp(`lessons-(\\d+)-`, 'g');
+        newForm.innerHTML = newForm.innerHTML.replace(formRegex, `lessons-${formCount}-`);
+        
+        // Limpiar valores de los campos
+        newForm.querySelectorAll('input[type="text"], input[type="url"], textarea').forEach(input => {
+            input.value = '';
+        });
+        
+        // Actualizar número de lección
+        newForm.querySelector('.lesson-number').textContent = formCount + 1;
+        
+        // Establecer el orden
+        const orderInput = newForm.querySelector(`input[name="lessons-${formCount}-order"]`);
+        if (orderInput) {
+            orderInput.value = formCount + 1;
+        }
+        
+        // Actualizar el conteo total
+        totalFormsInput.value = formCount + 1;
+        
+        // Añadir el nuevo formulario
+        lessonForms.appendChild(newForm);
+    });
+    
+    // Si no hay lecciones, agregar una inicial
+    if (lessonForms.children.length === 0) {
+        addLessonBtn.click();
+    }
+
+    // --- Eliminar lección ---
+    document.querySelectorAll('.lesson-delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const block = btn.closest('.lesson-form');
+            const checkbox = block.querySelector('.lesson-delete-checkbox');
+            if (checkbox) {
+                checkbox.checked = true;
+                block.style.display = 'none';
+            }
+        });
+    });
+
+    // --- Eliminar pregunta ---
+    document.querySelectorAll('.question-delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const block = btn.closest('.question-form-block');
+            const checkbox = block.querySelector('.question-delete-checkbox');
+            if (checkbox) {
+                checkbox.checked = true;
+                block.style.display = 'none';
+            }
+        });
+    });
+
+    // --- Eliminar material ---
+    document.querySelectorAll('.material-delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const block = btn.closest('.material-form-block');
+            const checkbox = block.querySelector('.material-delete-checkbox');
+            if (checkbox) {
+                checkbox.checked = true;
+                block.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Script para añadir preguntas dinámicamente
+const addQuestionBtn = document.getElementById('add-question');
+const questionForms = document.getElementById('question-forms');
+const totalQuestionsInput = document.getElementById('id_question-TOTAL_FORMS');
+if (addQuestionBtn && questionForms && totalQuestionsInput) {
+    addQuestionBtn.addEventListener('click', function() {
+        const formCount = parseInt(totalQuestionsInput.value);
+        const newForm = questionForms.children[0].cloneNode(true);
+        // Actualizar IDs y nombres de los campos
+        const formRegex = new RegExp(`question-(\\d+)-`, 'g');
+        newForm.innerHTML = newForm.innerHTML.replace(formRegex, `question-${formCount}-`);
+        // Limpiar valores de los campos
+        newForm.querySelectorAll('input[type="text"], textarea').forEach(input => {
+            input.value = '';
+        });
+        // Actualizar el conteo total
+        totalQuestionsInput.value = formCount + 1;
+        // Añadir el nuevo formulario
+        questionForms.appendChild(newForm);
+    });
+    // Si no hay preguntas, agregar una inicial
+    if (questionForms.children.length === 0) {
+        addQuestionBtn.click();
+    }
+}
+
+// Script para añadir materiales dinámicamente
+const addMaterialBtn = document.getElementById('add-material');
+const materialForms = document.getElementById('material-forms');
+const totalMaterialsInput = document.getElementById('id_material_formset-TOTAL_FORMS') || document.querySelector('input[name$="-TOTAL_FORMS"][id^="id_form-"]');
+if (addMaterialBtn && materialForms && totalMaterialsInput) {
+    addMaterialBtn.addEventListener('click', function() {
+        const formCount = parseInt(totalMaterialsInput.value);
+        const newForm = materialForms.children[0].cloneNode(true);
+        // Actualizar IDs y nombres de los campos
+        const formRegex = new RegExp(`material_formset-(\\d+)-`, 'g');
+        newForm.innerHTML = newForm.innerHTML.replace(formRegex, `material_formset-${formCount}-`);
+        // Limpiar valores de los campos
+        newForm.querySelectorAll('input[type="text"], input[type="file"], input[type="url"]').forEach(input => {
+            input.value = '';
+        });
+        // Actualizar el conteo total
+        totalMaterialsInput.value = formCount + 1;
+        // Añadir el nuevo formulario
+        materialForms.appendChild(newForm);
+    });
+    // Si no hay materiales, agregar uno inicial
+    if (materialForms.children.length === 0) {
+        addMaterialBtn.click();
+    }
+}
+</script>
+{% endblock %} 

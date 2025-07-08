@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - SRI Learning{% endblock %}
+
+{% block content %}
+<section class="hero mb-5 text-center text-lg-start fade-in">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-3 fw-bold mb-3">Aprende con <span class="text-primary">SRI Learning</span></h1>
+            <p class="lead mb-4">La plataforma de micro-cursos que te ayuda a desarrollar habilidades específicas en poco tiempo.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{% url 'courses:course_list' %}" class="btn btn-primary btn-lg px-4 me-md-2 shadow">Ver todos los cursos</a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="https://placehold.co/600x400/1a3a6c/FFF?text=SRI+Learning" alt="SRI Learning" class="img-fluid rounded shadow-lg">
+        </div>
+    </div>
+</section>
+
+<section class="vision-section mb-5 py-5 bg-light fade-in">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="display-5 fw-bold mb-4">
+                    <i class="bi bi-eye-fill text-primary me-3"></i>
+                    Nuestra Visión
+                </h2>
+                <div class="row g-4 mt-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-lightning-charge-fill text-warning fs-1"></i>
+                                </div>
+                                <h4 class="card-title fw-bold">Aprendizaje Rápido</h4>
+                                <p class="card-text text-muted">
+                                    Micro-cursos diseñados para que aprendas habilidades específicas en el menor tiempo posible, 
+                                    sin perder tiempo en contenido innecesario.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-people-fill text-success fs-1"></i>
+                                </div>
+                                <h4 class="card-title fw-bold">Comunidad Activa</h4>
+                                <p class="card-text text-muted">
+                                    Conecta con instructores expertos y otros estudiantes. 
+                                    Aprende de experiencias reales y construye tu red profesional.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-graph-up-arrow text-info fs-1"></i>
+                                </div>
+                                <h4 class="card-title fw-bold">Resultados Medibles</h4>
+                                <p class="card-text text-muted">
+                                    Cada curso incluye evaluaciones y certificados que validan tu aprendizaje 
+                                    y te ayudan a demostrar tus nuevas habilidades.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-globe text-primary fs-1"></i>
+                                </div>
+                                <h4 class="card-title fw-bold">Acceso Global</h4>
+                                <p class="card-text text-muted">
+                                    Plataforma accesible desde cualquier dispositivo, en cualquier momento. 
+                                    Tu aprendizaje no tiene límites geográficos ni temporales.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <h3 class="fw-bold mb-3">¿Por qué elegir SRI Learning?</h3>
+                    <p class="lead text-muted">
+                        En un mundo donde el tiempo es oro, creemos que el aprendizaje debe ser eficiente, 
+                        práctico y accesible. Nuestros micro-cursos están diseñados por expertos para 
+                        darte exactamente lo que necesitas, cuando lo necesitas.
+                    </p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-search me-2"></i>Explorar Cursos
+                        </a>
+                        <a href="#" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-person-plus me-2"></i>Únete Ahora
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="featured-courses mb-5 fade-in">
+    <h2 class="mb-4 text-center text-lg-start">
+        <i class="bi bi-fire me-2 text-danger"></i>
+        Cursos más populares del mes
+    </h2>
+    {% if featured_courses %}
+    <div id="courseCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for course in featured_courses %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <div class="card mx-auto" style="max-width: 900px;">
+                    <div class="row g-0 align-items-center">
+                        <div class="col-md-6">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h3 class="card-title fw-bold mb-0">{{ course.title }}</h3>
+                                    {% if course.recent_student_count %}
+                                        <span class="badge bg-success ms-2">
+                                            <i class="bi bi-people-fill me-1"></i>
+                                            {{ course.recent_student_count }} estudiantes este mes
+                                        </span>
+                                    {% elif course.total_student_count %}
+                                        <span class="badge bg-info ms-2">
+                                            <i class="bi bi-people me-1"></i>
+                                            {{ course.total_student_count }} estudiantes total
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="card-text">{{ course.short_description }}</p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person-circle me-1"></i>
+                                        Por: {{ course.instructor.get_full_name|default:course.instructor.username }}
+                                    </small>
+                                </p>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Ver curso
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm">
+                                <iframe src="{{ course.get_embed_url }}" allowfullscreen frameborder="0" class="rounded"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#courseCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#courseCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="bi bi-info-circle fs-1 text-muted mb-3 d-block"></i>
+        <h5>No hay cursos populares disponibles en este momento</h5>
+        <p class="mb-0">¡Sé el primero en inscribirte en nuestros cursos!</p>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %} 

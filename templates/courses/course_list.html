@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Cursos - SRI Learning{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h1 class="fw-bold mb-0">Todos los Cursos</h1>
+        {% if request.GET.q %}
+        <p class="text-muted mb-0">Resultados para: "{{ request.GET.q }}"</p>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <form method="GET" action="{% url 'courses:course_list' %}" class="d-flex">
+            <input class="form-control me-2" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar cursos...">
+            <button class="btn btn-primary shadow" type="submit">Buscar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Filtros Avanzados -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-light border-0">
+        <h5 class="mb-0">
+            <i class="bi bi-funnel me-2"></i>
+            Filtros Avanzados
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{% url 'courses:course_list' %}" id="advanced-filters">
+            <!-- Mantener búsqueda existente -->
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="category" class="form-label fw-bold">Categoría</label>
+                    <select class="form-select" name="category" id="category">
+                        <option value="">Todas las categorías</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="difficulty" class="form-label fw-bold">Dificultad</label>
+                    <select class="form-select" name="difficulty" id="difficulty">
+                        <option value="">Todas las dificultades</option>
+                        {% for value, label in difficulties %}
+                        <option value="{{ value }}" {% if selected_difficulty == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="duration" class="form-label fw-bold">Duración</label>
+                    <select class="form-select" name="duration" id="duration">
+                        <option value="">Todas las duraciones</option>
+                        {% for value, label in durations %}
+                        <option value="{{ value }}" {% if selected_duration == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="order_by" class="form-label fw-bold">Ordenar por</label>
+                    <select class="form-select" name="order_by" id="order_by">
+                        {% for value, label in order_options %}
+                        <option value="{{ value }}" {% if selected_order == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search me-1"></i>Aplicar Filtros
+                    </button>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if courses %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for course in courses %}
+    <div class="col">
+        <div class="card h-100 shadow rounded-4 border-0">
+            {% if course.thumbnail %}
+            <img src="{{ course.thumbnail.url }}" class="card-img-top rounded-top-4" alt="{{ course.title }}" style="object-fit:cover; height:200px;">
+            {% else %}
+            <img src="https://placehold.co/600x400/1a3a6c/FFF?text=Curso" class="card-img-top rounded-top-4" alt="{{ course.title }}" style="object-fit:cover; height:200px;">
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold mb-0">{{ course.title }}</h5>
+                    <span class="badge bg-primary">{{ course.get_course_type|title }}</span>
+                </div>
+                
+                <p class="card-text">{{ course.short_description }}</p>
+                
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <span class="badge bg-secondary">{{ course.get_category_display }}</span>
+                        <span class="badge bg-info">{{ course.get_difficulty_display }}</span>
+                        <span class="badge bg-warning text-dark">{{ course.get_duration }}</span>
+                    </div>
+                    <p class="card-text mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-person-circle me-1"></i>
+                            Por: {{ course.instructor.get_full_name|default:course.instructor.username }}
+                        </small>
+                    </p>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i>Ver detalles
+                    </a>
+                    <div class="text-end">
+                        {% if course.students.count > 0 %}
+                            <small class="text-muted">
+                                <i class="bi bi-people me-1"></i>
+                                {{ course.students.count }} estudiantes
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación -->
+{% if is_paginated %}
+<nav aria-label="Navegación de páginas" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" title="Primera página">&laquo;</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" title="Página anterior">Anterior</a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" title="Página siguiente">Siguiente</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" title="Última página">&raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info text-center rounded-4 shadow-sm">
+    <i class="bi bi-search fs-1 text-muted mb-3"></i>
+    <h4>No se encontraron cursos</h4>
+    {% if request.GET.q %}
+    <p class="mb-0">No hay cursos que coincidan con "{{ request.GET.q }}"</p>
+    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary mt-3">Ver todos los cursos</a>
+    {% else %}
+    <p class="mb-0">Aún no hay cursos disponibles.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %} 

@@ -1,0 +1,62 @@
+<footer class="footer py-4 mt-5 shadow-lg">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h5 class="fw-bold">SRI Learning</h5>
+                <p class="mb-0">Plataforma de micro-cursos especializados</p>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <h5 class="fw-bold">Enlaces</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'home' %}" class="text-white text-decoration-underline">Inicio</a></li>
+                    <li><a href="{% url 'courses:course_list' %}" class="text-white text-decoration-underline">Cursos</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5 class="fw-bold">Contacto</h5>
+                <ul class="list-unstyled">
+                    <li><a href="mailto:info@srilearning.com" class="text-white text-decoration-underline">info@srilearning.com</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr class="mt-4 mb-4 border-light">
+        {% if page_obj %}
+        <nav class="d-flex justify-content-center">
+            <ul class="pagination pagination-lg">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-start" href="?page=1" title="Primera página">&laquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" title="Página anterior">Anterior</a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" title="Página siguiente">Siguiente</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link rounded-end" href="?page={{ page_obj.paginator.num_pages }}" title="Última página">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        <div class="text-center mt-3">
+            <p class="mb-0">&copy; {% now "Y" %} <span class="fw-bold">SRI Learning</span>. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer> 

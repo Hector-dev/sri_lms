@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Test: {{ test.title }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Test: {{ test.title }}</h1>
+    <p>{{ test.description }}</p>
+    <div class="mb-3">
+        <span class="badge bg-info">Intento {{ attempt }} de {{ max_attempts }}</span>
+    </div>
+    {% if test.time_limit > 0 %}
+    <div class="alert alert-warning"><strong>Tiempo límite:</strong> <span id="timer">{{ test.time_limit }}:00</span> minutos</div>
+    {% endif %}
+    <form method="post" id="test-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="mb-4">
+                <label class="fw-bold">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Enviar respuestas</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if test.time_limit > 0 %}
+<script>
+let totalSeconds = {{ test.time_limit }} * 60;
+const timerDisplay = document.getElementById('timer');
+const form = document.getElementById('test-form');
+function updateTimer() {
+    const min = Math.floor(totalSeconds / 60);
+    const sec = totalSeconds % 60;
+    timerDisplay.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    if (totalSeconds <= 0) {
+        clearInterval(timerInterval);
+        form.querySelectorAll('input, button').forEach(function(el) { el.disabled = true; });
+        alert('¡Tiempo agotado! Tus respuestas ya no pueden ser enviadas.');
+    }
+    totalSeconds--;
+}
+const timerInterval = setInterval(updateTimer, 1000);
+updateTimer();
+</script>
+{% endif %}
+{% endblock %} 

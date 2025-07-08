@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil - SRI Learning{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="card shadow rounded-4 border-0">
+            <div class="card-body text-center">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" class="rounded-circle img-thumbnail shadow mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                <img src="https://placehold.co/150x150/1a3a6c/FFF?text=Usuario" class="rounded-circle img-thumbnail shadow mb-3">
+                {% endif %}
+                <h4 class="mt-3 fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted">{{ user.get_user_type_display }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow rounded-4 border-0">
+            <div class="card-header bg-primary text-white rounded-top-4">
+                <h5 class="mb-0 fw-bold">Información Personal</h5>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div class="mb-3">
+                    <label class="fw-bold">Nombre de Usuario:</label>
+                    <p>{{ user.username }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Email:</label>
+                    <p>{{ user.email }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Tipo de Usuario:</label>
+                    <p>{{ user.get_user_type_display }}</p>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold">Fecha de Registro:</label>
+                    <p>{{ user.date_joined|date:"d/m/Y" }}</p>
+                </div>
+                <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">Editar Perfil</a>
+            </div>
+        </div>
+        {% if user.user_type == 'instructor' %}
+        <div class="card shadow rounded-4 border-0 mt-4">
+            <div class="card-header bg-success text-white rounded-top-4">
+                <h5 class="mb-0 fw-bold">Mis Cursos</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'courses:create_course' %}" class="btn btn-success">Crear Nuevo Curso</a>
+                <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-outline-success ms-2">Panel de Instructor</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card shadow rounded-4 border-0 mt-4">
+            <div class="card-header bg-primary text-white rounded-top-4">
+                <h5 class="mb-0 fw-bold">Mi Panel</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'users:student_dashboard' %}" class="btn btn-outline-primary">Ir a mi panel</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,138 @@
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">SRI Learning</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'courses' in request.path %}active{% endif %}" href="{% url 'courses:course_list' %}">Cursos</a>
+                    </li>
+                </ul>
+                <div class="ms-2">
+                    {% if user.is_authenticated %}
+                    <!-- Notificaciones -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-light position-relative" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell-fill"></i>
+                            {% if unread_notifications|length > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                                    {% if unread_notifications|length > 9 %}9+{% else %}{{ unread_notifications|length }}{% endif %}
+                                </span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                            {% if unread_notifications %}
+                                {% for notification in unread_notifications|slice:":5" %}
+                                <li>
+                                    <a class="dropdown-item py-2" href="{% url 'users:notifications' %}">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0">
+                                                <i class="bi bi-info-circle-fill text-primary"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <div class="small">{{ notification.message }}</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">{{ notification.created_at|timesince }}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% if unread_notifications|length > 5 %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-center text-primary" href="{% url 'users:notifications' %}">Ver todas las notificaciones</a></li>
+                                {% endif %}
+                            {% else %}
+                                <li><span class="dropdown-item-text text-muted">No tienes notificaciones nuevas</span></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'users:notifications' %}">Ver todas las notificaciones</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Menú de usuario -->
+                    <div class="dropdown d-flex align-items-center gap-2">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Foto de perfil" class="rounded-circle" width="36" height="36" style="object-fit:cover; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                        {% else %}
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px; height:36px; background:var(--primary-color); color:white; font-weight:bold; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+                                {{ user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <button class="btn btn-success dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu rounded-3 shadow" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'users:profile' %}"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'users:notifications' %}"><i class="bi bi-bell me-2"></i>Notificaciones</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openPreferencesModal(); return false;"><i class="bi bi-gear me-2"></i>Preferencias</a></li>
+                            {% if user.user_type == 'instructor' %}
+                            <li><a class="dropdown-item" href="{% url 'courses:instructor_dashboard' %}"><i class="bi bi-easel me-2"></i>Panel de Instructor</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{% url 'users:student_dashboard' %}"><i class="bi bi-mortarboard me-2"></i>Mi Panel</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'users:login' %}" class="btn btn-outline-light me-2">Iniciar Sesión</a>
+                    <a href="{% url 'users:register' %}" class="btn btn-success">Registrarse</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+    
+    searchInput.addEventListener('input', async (e) => {
+        const query = e.target.value;
+        if (query.length > 2) {
+            try {
+                const response = await fetch(`/api/search/?q=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                searchResults.innerHTML = '';
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(result => {
+                        const a = document.createElement('a');
+                        a.href = `/courses/${result.slug}/`;
+                        a.className = 'dropdown-item';
+                        a.textContent = result.title;
+                        searchResults.appendChild(a);
+                    });
+                    searchResults.style.display = 'block';
+                } else {
+                    searchResults.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error en búsqueda:', error);
+                searchResults.style.display = 'none';
+            }
+        } else {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    // Close the dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+});
+</script> 

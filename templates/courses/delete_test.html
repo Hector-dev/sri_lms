@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' course.slug %}">{{ course.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Eliminar Test</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Eliminar Test
+                    </h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    
+                    <h4 class="text-center mb-3">¿Estás seguro de que quieres eliminar este test?</h4>
+                    
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">Test a eliminar:</h5>
+                        <p class="mb-1"><strong>{{ test.title }}</strong></p>
+                        <p class="mb-1"><small class="text-muted">Curso: {{ course.title }}</small></p>
+                        <p class="mb-0"><small class="text-muted">Orden: {{ test.order }}</small></p>
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <h6 class="alert-heading">⚠️ Advertencia:</h6>
+                        <ul class="mb-0">
+                            <li>Esta acción no se puede deshacer</li>
+                            <li>Se eliminarán todas las preguntas del test</li>
+                            <li>Se eliminarán todos los resultados de los estudiantes</li>
+                            <li>Los estudiantes perderán acceso a este test</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Eliminar Test
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

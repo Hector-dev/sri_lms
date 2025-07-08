@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Resultado del Test - {{ test.title }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header con navegación -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-white px-3 py-2 rounded-3 shadow-sm">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'courses:course_detail' course.slug %}">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Resultado del Test</li>
+                </ol>
+            </nav>
+
+            <!-- Tarjeta principal del resultado -->
+            <div class="card shadow-lg border-0 rounded-4 mb-4">
+                <div class="card-header bg-gradient-primary text-white text-center py-4 rounded-top-4">
+                    <h2 class="mb-0">
+                        <i class="bi bi-clipboard-check me-2"></i>
+                        Resultado del Test: {{ test.title }}
+                    </h2>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Puntuación principal -->
+                    <div class="text-center mb-4">
+                        <div class="display-4 fw-bold {% if score >= 80 %}text-success{% elif score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ score }}%
+                        </div>
+                        <div class="h5 text-muted mb-3">
+                            {{ correct }} de {{ total }} respuestas correctas
+                        </div>
+                        <div class="badge bg-info fs-6 px-3 py-2">
+                            <i class="bi bi-arrow-repeat me-1"></i>
+                            Intento {{ attempt }} de {{ max_attempts }}
+                        </div>
+                    </div>
+
+                    <!-- Barra de progreso visual -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold">Progreso del test</span>
+                            <span class="text-muted">{{ score }}% completado</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ score }}%" 
+                                 aria-valuenow="{{ score }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ score }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje motivacional -->
+                    <div class="alert {% if score >= 80 %}alert-success{% elif score >= 60 %}alert-warning{% else %}alert-danger{% endif %} text-center mb-4">
+                        <h5 class="mb-2">
+                            {% if score >= 80 %}
+                                <i class="bi bi-emoji-smile-fill me-2"></i>¡Excelente trabajo!
+                            {% elif score >= 60 %}
+                                <i class="bi bi-emoji-neutral-fill me-2"></i>¡Buen esfuerzo!
+                            {% else %}
+                                <i class="bi bi-emoji-frown-fill me-2"></i>¡Sigue practicando!
+                            {% endif %}
+                        </h5>
+                        <p class="mb-0">
+                            {% if score >= 80 %}
+                                Has demostrado un excelente dominio del contenido. ¡Continúa así!
+                            {% elif score >= 60 %}
+                                Has logrado una puntuación aprobatoria. Revisa los errores para mejorar.
+                            {% else %}
+                                No te desanimes, revisa el material y vuelve a intentarlo.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-4">
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>Volver al curso
+                        </a>
+                        {% if attempt < max_attempts %}
+                        <a href="{% url 'courses:take_test' course.id test.id %}" class="btn btn-outline-warning btn-lg">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Intentar de nuevo
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle de respuestas -->
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Detalle de tus respuestas
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for answer in answers %}
+                        <div class="list-group-item border-0 py-3 {% if forloop.counter|divisibleby:2 %}bg-light{% endif %}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6 class="fw-bold mb-2">
+                                        <span class="badge bg-secondary me-2">{{ forloop.counter }}</span>
+                                        {{ answer.question.text }}
+                                    </h6>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="fw-bold me-2">Tu respuesta:</span>
+                                        <span class="badge {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %} fs-6 px-3 py-2">
+                                            {{ answer.selected_option }}
+                                            {% if answer.is_correct %}
+                                                <i class="bi bi-check-circle-fill ms-1"></i>
+                                            {% else %}
+                                                <i class="bi bi-x-circle-fill ms-1"></i>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    {% if not answer.is_correct %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="fw-bold me-2 text-success">Respuesta correcta:</span>
+                                        <span class="badge bg-success fs-6 px-3 py-2">
+                                            {{ answer.question.correct_option }}
+                                            <i class="bi bi-check-circle-fill ms-1"></i>
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    {% if answer.is_correct %}
+                                        <div class="text-success">
+                                            <i class="bi bi-check-circle-fill fs-4"></i>
+                                            <div class="small">Correcta</div>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-danger">
+                                            <i class="bi bi-x-circle-fill fs-4"></i>
+                                            <div class="small">Incorrecta</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %} 

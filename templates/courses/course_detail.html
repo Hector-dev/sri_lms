@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load course_extras %}
+
+{% block title %}{{ course.title }} - SRI Learning{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-white px-3 py-2 rounded-3 shadow-sm mb-4">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'courses:course_list' %}">Cursos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ course.title }}</li>
+            </ol>
+        </nav>
+        <h1 class="fw-bold">{{ course.title }}</h1>
+        <p class="text-muted mb-4">Instructor: {{ course.instructor.get_full_name|default:course.instructor.username }}</p>
+        <div class="ratio ratio-16x9 mb-4 rounded-4 overflow-hidden shadow-sm">
+            <iframe src="{{ course.get_embed_url }}" allowfullscreen frameborder="0" class="rounded-4"></iframe>
+        </div>
+        <div class="mb-4">
+            <h3 class="fw-bold">Acerca de este curso</h3>
+            <p>{{ course.short_description }}</p>
+        </div>
+        {% if lessons %}
+        <div class="mb-4">
+            <h3 class="fw-bold">Contenido del curso</h3>
+            <div class="accordion" id="lessonAccordion">
+                {% for lesson in lessons %}
+                <div class="accordion-item rounded-4 mb-2 shadow-sm border-0">
+                    <h2 class="accordion-header" id="heading{{ lesson.id }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" 
+                                data-bs-target="#collapse{{ lesson.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                                aria-controls="collapse{{ lesson.id }}">
+                            Lección {{ forloop.counter }}: {{ lesson.title }}
+                            {% if user.is_authenticated and user.user_type == 'student' and lesson.id in progress %}
+                                <span class="badge bg-success ms-2">Completada</span>
+                            {% endif %}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ lesson.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                         aria-labelledby="heading{{ lesson.id }}" data-bs-parent="#lessonAccordion">
+                        <div class="accordion-body">
+                            <div class="ratio ratio-16x9 mb-3 rounded-4 overflow-hidden">
+                                <iframe src="{{ lesson.get_embed_url }}" allowfullscreen frameborder="0" class="rounded-4"></iframe>
+                            </div>
+                            <p>{{ lesson.content|linebreaks }}</p>
+                            {% if user.is_authenticated and user.user_type == 'student' and lesson.id not in progress and user in course.students.all %}
+                            <button class="btn btn-outline-success btn-sm mark-complete-btn" data-lesson-id="{{ lesson.id }}">Marcar como completada</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center rounded-4 shadow-sm">Este curso aún no tiene lecciones.</div>
+        {% endif %}
+        {% if tests %}
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold mb-0">Tests del curso</h3>
+                {% if user.is_authenticated and user.user_type == 'instructor' and user == course.instructor %}
+                    <a href="{% url 'courses:create_test' course.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>Añadir Test
+                    </a>
+                {% endif %}
+            </div>
+            <div class="list-group mb-3">
+                {% for test in tests %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-secondary me-2">Test {{ test.order }}</span>
+                            <span class="fw-bold">{{ test.title }}</span>
+                            {% if test.max_attempts > 1 %}
+                                <span class="badge bg-info ms-2">{{ test.max_attempts }} intentos</span>
+                            {% endif %}
+                            {% if test.time_limit > 0 %}
+                                <span class="badge bg-warning ms-1">{{ test.time_limit }} min</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-2">
+                            {% if user.is_authenticated and user.user_type == 'instructor' and user == course.instructor %}
+                                <a href="{% url 'courses:edit_test' course.id test.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'courses:delete_test' course.id test.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            {% elif user.is_authenticated and user.user_type != 'instructor' and user in course.students.all %}
+                                <a href="{% url 'courses:take_test' course.id test.id %}" class="btn btn-sm btn-warning">Realizar Test</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if test.description %}
+                        <p class="text-muted mb-2">{{ test.description }}</p>
+                    {% endif %}
+                    
+                    {% if test_results|get_item:test.id %}
+                        {% with result=test_results|get_item:test.id %}
+                        <div class="mt-2 p-3 bg-light rounded-3 border-start border-4 border-success">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1 text-success fw-bold">
+                                        <i class="bi bi-check-circle-fill me-2"></i>Mejor puntuación: {{ result.score }}%
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ result.correct }}/{{ result.total }} respuestas correctas
+                                    </small>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Realizado: {{ result.taken_at|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    {% elif user.is_authenticated and user.user_type == 'student' and user in course.students.all %}
+                        <div class="mt-2 p-2 bg-light rounded-3 border-start border-4 border-warning">
+                            <small class="text-muted">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Aún no has realizado este test
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="fw-bold mb-0">Tests del curso</h3>
+                {% if user.is_authenticated and user.user_type == 'instructor' and user == course.instructor %}
+                    <a href="{% url 'courses:create_test' course.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>Añadir Test
+                    </a>
+                {% endif %}
+            </div>
+            <div class="alert alert-info text-center rounded-4 shadow-sm">
+                Este curso aún no tiene tests.
+                {% if user.is_authenticated and user.user_type == 'instructor' and user == course.instructor %}
+                    <br><small>Haz clic en "Añadir Test" para crear el primer test del curso.</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% if materials %}
+        <div class="mb-4">
+            <h3 class="fw-bold">Materiales Adicionales</h3>
+            <ul class="list-group mb-3">
+                {% for material in materials %}
+                <li class="list-group-item">
+                    <strong>{{ material.title }}</strong><br>
+                    {% if material.file %}
+                        <a href="{{ material.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">Descargar archivo</a>
+                    {% endif %}
+                    {% if material.url %}
+                        <a href="{{ material.url }}" target="_blank" class="btn btn-sm btn-outline-info mt-1">Ver enlace</a>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow rounded-4 border-0">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">Resumen del curso</h5>
+                <ul class="list-unstyled mb-4">
+                    <li><i class="bi bi-film"></i> {{ lessons|length }} lecciones</li>
+                    <li><i class="bi bi-patch-question"></i> {{ tests|length }} tests</li>
+                    <li><i class="bi bi-calendar"></i> Publicado: {{ course.created_at|date:"d/m/Y" }}</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    {% if user.is_authenticated and user != course.instructor and user not in course.students.all %}
+                    <form method="post" action="{% url 'courses:enroll_course' course.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Inscribirse al curso</button>
+                    </form>
+                    {% elif user.is_authenticated and user in course.students.all %}
+                        <button class="btn btn-secondary" disabled>Ya inscrito</button>
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'users:login' %}" class="btn btn-success">Inicia sesión para inscribirte</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.user_type != 'instructor' and user in course.students.all %}
+                        <a href="{% url 'courses:download_certificate' course.id %}" class="btn btn-success">Descargar Certificado</a>
+                    {% endif %}
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-primary">Ver más cursos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.mark-complete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const lessonId = this.getAttribute('data-lesson-id');
+            const originalText = this.textContent;
+            const originalClass = this.className;
+            
+            // Deshabilitar botón y mostrar estado de carga
+            this.disabled = true;
+            this.textContent = 'Procesando...';
+            this.className = 'btn btn-secondary btn-sm mark-complete-btn';
+            
+            fetch('{% url "courses:complete_lesson" 0 %}'.replace('0', lessonId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    this.classList.remove('btn-secondary');
+                    this.classList.add('btn-success');
+                    this.textContent = 'Completada';
+                    this.disabled = true;
+                    
+                    // Actualizar el badge en el header de la lección
+                    const lessonHeader = this.closest('.accordion-item').querySelector('.accordion-button');
+                    if (lessonHeader) {
+                        const existingBadge = lessonHeader.querySelector('.badge');
+                        if (!existingBadge) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-success ms-2';
+                            badge.textContent = 'Completada';
+                            lessonHeader.appendChild(badge);
+                        }
+                    }
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Restaurar botón en caso de error
+                this.disabled = false;
+                this.textContent = originalText;
+                this.className = originalClass;
+                
+                // Mostrar mensaje de error al usuario
+                alert('Error al marcar la lección como completada. Por favor, inténtalo de nuevo.');
+            });
+        });
+    });
+});
+</script>
+{% endblock %} 

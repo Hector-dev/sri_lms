@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar Intentos - {{ course.title }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestionar Intentos de Tests - {{ course.title }}</h1>
+    {% if results %}
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Test</th>
+                    <th>Puntaje</th>
+                    <th>Correctas</th>
+                    <th>Intento</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for result in results %}
+                <tr>
+                    <td>{{ result.student.username }}</td>
+                    <td>{{ result.test.title }}</td>
+                    <td>{{ result.score }}%</td>
+                    <td>{{ result.correct }}/{{ result.total }}</td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ result.taken_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <form method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="result_id" value="{{ result.id }}">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este intento?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-secondary">No hay intentos registrados para este curso.</div>
+    {% endif %}
+    <a href="{% url 'courses:instructor_dashboard' %}" class="btn btn-secondary mt-3">Volver al Panel de Instructor</a>
+</div>
+{% endblock %} 
