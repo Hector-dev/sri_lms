@@ -7,3 +7,6 @@ db.sqlite3
 .env.*
 credenciales*.txt
 logs/
+
+# Datos de usuarios
+media/
