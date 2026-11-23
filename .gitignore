@@ -1,0 +1,9 @@
+
+# Datos locales y credenciales
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+.env.*
+credenciales*.txt
+logs/
